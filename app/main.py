@@ -1,21 +1,57 @@
-import streamlit as st
+import os 
+import sys 
 import folium
+import polyline
+import streamlit as st
+
 from folium import PolyLine
 from streamlit_folium import folium_static
-import polyline
 
+# Modifying the root path for imports
+current = os.path.dirname(os.path.realpath(__file__))
+parent = os.path.dirname(current)
+sys.path.append(parent) 
 
+from config import API_KEY
+from API_.route_API import RouteAPI
 
-# Define the polyline string (replace with your actual polyline string)
-polyline_str = 'mjm|HqdrY|JmGdE_Co@dFqKpIfA~CwK~RiNrNmGu@kIaJqZP{SrLgRcPfE{V~EwNkDmGmMvSyNbQuRnH}`@~CyOeCaJkIs`@gm@wTub@_YwUcLmUkBiV|g@cnClN{kDf`@cxLh`@ydCvXksBp`AmeG|\\eoBdIa_AY}}AoEahC_o@ieE_e@w_Bor@w~Ai|AsqBqb@aw@eS_nAnAoiBlJifEpBihAsNsdBqPayA[cuB?orDaH{lAyP}eAy^k{AeHg{@SyyAEa{@EqhAC{t@Zys@xHuw@nRkxArJi_AnSsiCxb@ylDpPijAnG{pA~J{tAdQstAxJcxAdBy\\yEwLeJyCmPbMgUpAe`@gOiW{Tu^wg@o\\qUe^iF}YwHgHm\\}@c`Ag@q|BaNwh@uYk^{O}a@aDuc@_IcdDyc@kvDc^i~C{MajCsk@qgCu]{vCsWiiCoSsl@_V{Ygx@{u@glAm`@mbA}_@ceAqiAgh@kMkoAz@_g@kWy}@_u@ahAan@sd@ke@}Zk_Aq~@ixD}m@kcCq[ai@eZeVidA_l@_lAof@wr@qYaw@ge@kj@{g@}b@_d@od@yu@wNer@{CwdA`JooB{AuaAir@elByQmqAwCw~DwKcsBcbB_{HoGwv@Q_hAmHekA}YoaBm_@i_A}q@mi@}MeTsM_g@mh@_oBkx@m`C_q@esAu]qqAut@moBqaAwgDkr@kdCg\\ed@af@{Vgv@c\\q[_YkSk_@ucA_~Box@}oBi[_}@gJqe@}nAwwCkaAqoBmTaq@aPagBoQevC{Hsw@aN_k@}`@{u@ep@if@cyAoz@gfD}hBkqAkp@kYuNed@wJ_e@Y_t@lB}oAfSusArSqoAdOme@kMq\\i]ug@yzAiXehB|@gsBlIsdCh]{vDhIq~@`EuiAeKyjCmb@wgDm`@k_Cs~@ueB}Wqk@mMmq@}JeaD`Bg\\hBhJoEp@gKiI{ToRc_@gKiq@~Asa@_Cur@p@yxAbu@ciAne@}o@`Nok@nA{^wAeYeJgj@e^_o@o[_`AsTedCsoBi|@mr@qw@}d@slAuu@{}@c_As`AemAu]eQqe@qL{mA\\sd@_DaaCkf@akCer@ka@yDgNgJ}CqUrGo{@tD_x@eAipA}GsnBwLo_Fi\\imBs\\k{A_d@{~A_o@kq@cPqReKuZ{SewAwv@uaG{Map@oToa@{e@aeAmlC_jIgLmbA_Lym@{Wyn@g_@il@_e@_k@ii@kYmiAol@gp@_^{QqN{CoR_FuLaQfc@oQda@`D`EbEpGuDrMoKzQwByC'
+# Initialize the RouteAPI
+route_API = RouteAPI(API_KEY)
+
+# Streamlit page configuration
+st.set_page_config(
+    layout='wide'
+)
+
+# Streamlit sidebar inputs for origin and destination
+st.sidebar.title("Route Planner")
+origin = st.sidebar.text_input("Origin", "Delft")
+destination = st.sidebar.text_input("Destination", "Groningen")
+
+# # Fetch coordinates for the destination (if needed)
+# destination_coords = route_API.get_coordinates(destination)
+
+# Get route
+routes = route_API.get_routes(origin, destination)
+
+# The best route choice
+route = routes[0] 
+
+# Get stop points within 50km
+stop_points = route_API.get_stop_points(route, 50000)
+
+# Remove steps from the route dictionary
+route.pop("steps")
+
 
 # Decode the polyline string
+polyline_str = str(route['polyline'])
 coordinates = polyline.decode(polyline_str)
 
 # Create a Folium map centered around the midpoint of the coordinates
 midpoint = len(coordinates) // 2
 map_center = coordinates[midpoint]
-map_ = folium.Map(location=map_center, zoom_start=10)
+map_ = folium.Map(location=map_center, zoom_start=8)
 
 # Add the polyline to the map
 polyline_layer = PolyLine(locations=coordinates, color='blue', weight=5)
@@ -23,4 +59,6 @@ map_.add_child(polyline_layer)
 
 # Display the map in Streamlit
 st.title("Route Map")
-folium_static(map_)
+
+# Display the map 
+folium_static(map_, width=1200, height=750)
