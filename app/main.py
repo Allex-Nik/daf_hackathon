@@ -10,7 +10,7 @@ from streamlit_folium import folium_static
 # Modifying the root path for imports
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
-sys.path.append(parent) 
+sys.path.append(parent)
 
 from config import API_KEY
 from API_.route_API import RouteAPI
@@ -58,7 +58,7 @@ coordinates = polyline.decode(polyline_str)
 # Create a Folium map centered around the midpoint of the coordinates
 midpoint = len(coordinates) // 2
 map_center = coordinates[midpoint]
-map_ = folium.Map(location=map_center, zoom_start=8)
+map_ = folium.Map(location=map_center, zoom_start=14)
 
 # Add the polyline to the map
 polyline_layer = PolyLine(locations=coordinates, color='blue', weight=5)
