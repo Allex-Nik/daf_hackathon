@@ -33,19 +33,16 @@ type_ = st.sidebar.text_input("Place", "Cafe")
 origin = st.sidebar.text_input("Origin", "Technische Universiteit Eindhoven")
 destination = st.sidebar.text_input("Destination", "DAF Museum")
 
-# # Fetch coordinates for the destination (if needed)
-# destination_coords = route_API.get_coordinates(destination)
-
 # Get route
 routes = route_API.get_routes(origin, destination)
 
 # The best route choice
-route = routes[0] 
+route = routes[0]
 
 # Get stop points within 50km
 stop_points = route_API.get_stop_points(route, 500)
 
-# get the list of places 
+# get the list of places
 place_list = [places_API.get_places(lat=dict_['lat'], lng=dict_['lng'], radius=1000, types=[type_]) for dict_ in stop_points][0]
 
 # Remove steps from the route dictionary

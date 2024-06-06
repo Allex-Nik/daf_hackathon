@@ -1,5 +1,6 @@
 data/dummy.pkl
 data/Truck_ride.pkl
+data/trace_demo.pkl
 __pycache__
 API_/__pycache__/
 app/functions/__pycache__
