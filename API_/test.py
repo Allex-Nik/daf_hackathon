@@ -1,7 +1,7 @@
 from route_API import RouteAPI
 from test_route import route
 
-API_key = "AIzaSyA2jyZ5RD-g9n1Mb-56Oi1BgYUVRPkwXHs"
+API_key = 'AIzaSyAqyVQ3IW56ZzbyazmCepgYGb4vETOf0V4'
 
 #You need to create RouteAPI to init google maps Client
 route_API = RouteAPI(API_key)

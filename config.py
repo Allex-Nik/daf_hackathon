@@ -1,3 +1,3 @@
 # the API key for google maps 
-API_KEY = "AIzaSyA2jyZ5RD-g9n1Mb-56Oi1BgYUVRPkwXHs"
+API_KEY = "AIzaSyAqyVQ3IW56ZzbyazmCepgYGb4vETOf0V4"
 
