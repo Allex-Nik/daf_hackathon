@@ -1,5 +1,13 @@
+import os
+import sys
 import googlemaps # library for Google Maps API. Use 'pip install googlemaps' to install
-import route_API # file with class RouteAPI
+
+# Modifying the root path for imports
+current = os.path.dirname(os.path.realpath(__file__))
+parent = os.path.dirname(current)
+sys.path.append(parent)
+
+import API_.route_API as route_API # file with class RouteAPI
 from geopy.distance import geodesic
 
 

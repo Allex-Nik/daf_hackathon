@@ -4,3 +4,4 @@ data/trace_demo.pkl
 __pycache__
 API_/__pycache__/
 app/functions/__pycache__
+__pycache__/
