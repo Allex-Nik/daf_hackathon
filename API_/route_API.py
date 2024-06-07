@@ -13,13 +13,17 @@ class RouteAPI:
     __DEFAULT_DISTANCE_BETWEEN_POINTS: int = 50000
     __REGION: str = "NL"
     __MODE: str = "driving"
+    
+    __METERS_IN_KILOMETERS : int = 1000
+    __SECONDS_IN_HOUR : int = 3600
+    __SECONDS_IN_MINUTE : int = 60
 
     def __init__(self, API_key: str):
         self.__API_key = API_key
         self.__gmaps = googlemaps.Client(self.__API_key)
 
     def get_routes(self, origin: str | Dict | Tuple | List, destination: str | Dict | Tuple | List,
-                   alternatives: bool = False) -> List[Dict]:
+                   alternatives: bool = False, waypoints: List[str | Dict | Tuple | List] = None) -> List[Dict]:
         """
         Get route(s) from origin to destination.
         List of routes can be empty if there is no route between origin and destination.
@@ -28,6 +32,8 @@ class RouteAPI:
             origin (str | Dict | Tuple | List): The address or latitude/longitude value from which you wish to calculate directions.
             destination (str | Dict | Tuple | List): The address or latitude/longitude value from which you wish to calculate directions.
             alternatives (bool, optional): If True, more than one route may be returned in the response. Defaults to False.
+            waypoints (List[str | Dict | Tuple | List]): Specifies an array of waypoints.
+            Waypoints alter a route by routing it through the specified location(s). Defaults to None.
 
         Returns:
             List[Dict]: list of calculated route(s) from origin to destination.
@@ -37,6 +43,7 @@ class RouteAPI:
             origin,
             destination,
             alternatives=alternatives,
+            waypoints=waypoints,
             mode=self.__MODE,
             region=self.__REGION)
 
@@ -309,36 +316,91 @@ class RouteAPI:
 
         return points, new_distance
 
-    @staticmethod
-    def __parse_route(raw_route: Dict) -> Dict:
+    @classmethod
+    def __parse_route(cls, raw_route: Dict) -> Dict:
         route = dict()
 
         route["bounds"] = raw_route["bounds"]
-
-        leg = raw_route["legs"][0]
-
-        route["start_address"] = leg["start_address"]
-        route["start_location"] = leg["start_location"]
-        route["end_address"] = leg["end_address"]
-        route["end_location"] = leg["end_location"]
-
-        route["distance"] = leg["distance"]["value"]
-        route["distance_text"] = leg["distance"]["text"]
-        route["duration"] = leg["duration"]["value"]
-        route["duration_text"] = leg["duration"]["text"]
-
+        
+        route["start_address"] = raw_route["legs"][0]["start_address"]
+        route["start_location"] = raw_route["legs"][0]["start_location"]
+        
+        route["end_address"] = raw_route["legs"][-1]["end_address"]
+        route["end_location"] = raw_route["legs"][-1]["end_location"]
+        
+        route["distance"] = 0
+        route["duration"] = 0
         route["steps"] = list()
-        for raw_step in leg["steps"]:
-            step = dict()
+        
+        for leg in raw_route["legs"]:
 
-            step["start_location"] = raw_step["start_location"]
-            step["end_location"] = raw_step["end_location"]
-            step["distance"] = raw_step["distance"]["value"]
-            step["duration"] = raw_step["duration"]["value"]
-            step["polyline"] = raw_step["polyline"]["points"]
+            route["distance"] += leg["distance"]["value"]
+            route["duration"] += leg["duration"]["value"]
 
-            route["steps"].append(step)
+            for raw_step in leg["steps"]:
+                step = dict()
+
+                step["start_location"] = raw_step["start_location"]
+                step["end_location"] = raw_step["end_location"]
+                step["distance"] = raw_step["distance"]["value"]
+                step["duration"] = raw_step["duration"]["value"]
+                step["polyline"] = raw_step["polyline"]["points"]
+
+                route["steps"].append(step)
+        
+        route["distance_text"] = cls.__convert_meters_to_distance_text(route["distance"])
+        route["duration_text"] = cls.__convert_seconds_to_duration_text(route["duration"])
 
         route["polyline"] = raw_route['overview_polyline']["points"]
-
+        route["summary"] = raw_route["summary"]
+        route["warnings"] = raw_route["warnings"]
+        route["waypoint_order"] = raw_route["waypoint_order"]
+        
         return route
+    
+    
+    @classmethod
+    def __convert_seconds_to_duration_text(cls, seconds: int) -> str:
+        duration_text : str = ""
+        
+        hours : int = seconds // cls.__SECONDS_IN_HOUR
+        seconds %= cls.__SECONDS_IN_HOUR
+        minutes : int = seconds // cls.__SECONDS_IN_MINUTE
+        
+        if hours > 0:
+            duration_text += "{} hour".format(hours)
+            
+            if hours > 1:
+                duration_text += "s"
+            
+            if minutes > 0:
+                duration_text += " "
+        
+        if minutes > 0:
+            duration_text += "{} min".format(minutes)
+            
+            if minutes > 1:
+                duration_text += "s"
+        
+        if hours == 0 and minutes == 0:
+            duration_text = "0 mins"
+        
+        return duration_text
+    
+    
+    @classmethod
+    def __convert_meters_to_distance_text(cls, meters: int) -> str:
+        distance_text : str = ""
+        
+        if meters >= 99:
+            kilometers : float = meters // cls.__METERS_IN_KILOMETERS
+            
+            if kilometers < 100:
+                distance_text = "{:.1f} km".format(meters / cls.__METERS_IN_KILOMETERS)
+            else:
+                distance_text = "{} km".format(kilometers)
+            
+        else:
+            distance_text = "{} m".format(meters)
+        
+        return distance_text
