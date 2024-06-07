@@ -1,2 +1,7 @@
 data/dummy.pkl
-**/__pycache__/**
+data/Truck_ride.pkl
+data/trace_demo.pkl
+__pycache__
+API_/__pycache__/
+app/functions/__pycache__
+__pycache__/
